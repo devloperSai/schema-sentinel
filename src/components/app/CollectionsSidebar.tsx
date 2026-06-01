@@ -41,7 +41,7 @@ export function CollectionsSidebar() {
   const roots = collections.filter((c) => c.parentId === null);
   const orphans = endpoints.filter((e) => !e.collectionId);
 
-  const onContext = (e: MouseEvent, nodeKind: CtxMenu["nodeKind"] extends infer T ? T : never, id: string | null) => {
+  const onContext = (e: MouseEvent, nodeKind: "collection" | "endpoint" | "root", id: string | null) => {
     e.preventDefault();
     setCtx({ x: e.clientX, y: e.clientY, nodeKind, id });
   };
