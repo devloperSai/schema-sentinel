@@ -13,10 +13,13 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppEnvironmentsRouteImport } from './routes/_app/environments'
 import { Route as AppEndpointsRouteImport } from './routes/_app/endpoints'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAlertsRouteImport } from './routes/_app/alerts'
+import { Route as AppEndpointsNewRouteImport } from './routes/_app/endpoints.new'
 import { Route as AppEndpointsIdRouteImport } from './routes/_app/endpoints.$id'
+import { Route as AppEndpointsIdEditRouteImport } from './routes/_app/endpoints.$id.edit'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -37,6 +40,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppEnvironmentsRoute = AppEnvironmentsRouteImport.update({
+  id: '/environments',
+  path: '/environments',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEndpointsRoute = AppEndpointsRouteImport.update({
   id: '/endpoints',
   path: '/endpoints',
@@ -52,10 +60,20 @@ const AppAlertsRoute = AppAlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEndpointsNewRoute = AppEndpointsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppEndpointsRoute,
+} as any)
 const AppEndpointsIdRoute = AppEndpointsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AppEndpointsRoute,
+} as any)
+const AppEndpointsIdEditRoute = AppEndpointsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppEndpointsIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -65,7 +83,10 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AppAlertsRoute
   '/dashboard': typeof AppDashboardRoute
   '/endpoints': typeof AppEndpointsRouteWithChildren
-  '/endpoints/$id': typeof AppEndpointsIdRoute
+  '/environments': typeof AppEnvironmentsRoute
+  '/endpoints/$id': typeof AppEndpointsIdRouteWithChildren
+  '/endpoints/new': typeof AppEndpointsNewRoute
+  '/endpoints/$id/edit': typeof AppEndpointsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,7 +95,10 @@ export interface FileRoutesByTo {
   '/alerts': typeof AppAlertsRoute
   '/dashboard': typeof AppDashboardRoute
   '/endpoints': typeof AppEndpointsRouteWithChildren
-  '/endpoints/$id': typeof AppEndpointsIdRoute
+  '/environments': typeof AppEnvironmentsRoute
+  '/endpoints/$id': typeof AppEndpointsIdRouteWithChildren
+  '/endpoints/new': typeof AppEndpointsNewRoute
+  '/endpoints/$id/edit': typeof AppEndpointsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +109,10 @@ export interface FileRoutesById {
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/endpoints': typeof AppEndpointsRouteWithChildren
-  '/_app/endpoints/$id': typeof AppEndpointsIdRoute
+  '/_app/environments': typeof AppEnvironmentsRoute
+  '/_app/endpoints/$id': typeof AppEndpointsIdRouteWithChildren
+  '/_app/endpoints/new': typeof AppEndpointsNewRoute
+  '/_app/endpoints/$id/edit': typeof AppEndpointsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,7 +123,10 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/dashboard'
     | '/endpoints'
+    | '/environments'
     | '/endpoints/$id'
+    | '/endpoints/new'
+    | '/endpoints/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -105,7 +135,10 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/dashboard'
     | '/endpoints'
+    | '/environments'
     | '/endpoints/$id'
+    | '/endpoints/new'
+    | '/endpoints/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -115,7 +148,10 @@ export interface FileRouteTypes {
     | '/_app/alerts'
     | '/_app/dashboard'
     | '/_app/endpoints'
+    | '/_app/environments'
     | '/_app/endpoints/$id'
+    | '/_app/endpoints/new'
+    | '/_app/endpoints/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/environments': {
+      id: '/_app/environments'
+      path: '/environments'
+      fullPath: '/environments'
+      preLoaderRoute: typeof AppEnvironmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/endpoints': {
       id: '/_app/endpoints'
       path: '/endpoints'
@@ -176,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAlertsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/endpoints/new': {
+      id: '/_app/endpoints/new'
+      path: '/new'
+      fullPath: '/endpoints/new'
+      preLoaderRoute: typeof AppEndpointsNewRouteImport
+      parentRoute: typeof AppEndpointsRoute
+    }
     '/_app/endpoints/$id': {
       id: '/_app/endpoints/$id'
       path: '/$id'
@@ -183,15 +233,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEndpointsIdRouteImport
       parentRoute: typeof AppEndpointsRoute
     }
+    '/_app/endpoints/$id/edit': {
+      id: '/_app/endpoints/$id/edit'
+      path: '/edit'
+      fullPath: '/endpoints/$id/edit'
+      preLoaderRoute: typeof AppEndpointsIdEditRouteImport
+      parentRoute: typeof AppEndpointsIdRoute
+    }
   }
 }
 
+interface AppEndpointsIdRouteChildren {
+  AppEndpointsIdEditRoute: typeof AppEndpointsIdEditRoute
+}
+
+const AppEndpointsIdRouteChildren: AppEndpointsIdRouteChildren = {
+  AppEndpointsIdEditRoute: AppEndpointsIdEditRoute,
+}
+
+const AppEndpointsIdRouteWithChildren = AppEndpointsIdRoute._addFileChildren(
+  AppEndpointsIdRouteChildren,
+)
+
 interface AppEndpointsRouteChildren {
-  AppEndpointsIdRoute: typeof AppEndpointsIdRoute
+  AppEndpointsIdRoute: typeof AppEndpointsIdRouteWithChildren
+  AppEndpointsNewRoute: typeof AppEndpointsNewRoute
 }
 
 const AppEndpointsRouteChildren: AppEndpointsRouteChildren = {
-  AppEndpointsIdRoute: AppEndpointsIdRoute,
+  AppEndpointsIdRoute: AppEndpointsIdRouteWithChildren,
+  AppEndpointsNewRoute: AppEndpointsNewRoute,
 }
 
 const AppEndpointsRouteWithChildren = AppEndpointsRoute._addFileChildren(
@@ -202,12 +273,14 @@ interface AppRouteChildren {
   AppAlertsRoute: typeof AppAlertsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEndpointsRoute: typeof AppEndpointsRouteWithChildren
+  AppEnvironmentsRoute: typeof AppEnvironmentsRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAlertsRoute: AppAlertsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEndpointsRoute: AppEndpointsRouteWithChildren,
+  AppEnvironmentsRoute: AppEnvironmentsRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
