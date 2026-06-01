@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { AppShell, StatusDot, MethodBadge, SeverityBadge } from "@/components/app/AppShell";
 import { mockEndpoints, mockDrifts, timeAgo, type DriftLog, type Severity } from "@/lib/mock";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — SchemaGuard" }] }),
@@ -245,13 +246,15 @@ function DashboardPage() {
 }
 
 function CollectionsSummary() {
-  const collections = useStoreCollections();
-  const endpoints = useStoreEndpoints();
-  const counts = collections.map((c) => {
-    const direct = endpoints.filter((e) => e.collectionId === c.id);
-    const drifted = direct.filter((e) => e.status === "drifted").length;
-    return { c, total: direct.length, drifted };
-  }).filter((x) => x.c.parentId === null);
+  const collections = useStore((s) => s.collections);
+  const endpoints = useStore((s) => s.endpoints);
+  const counts = collections
+    .filter((c) => c.parentId === null)
+    .map((c) => {
+      const direct = endpoints.filter((e) => e.collectionId === c.id);
+      const drifted = direct.filter((e) => e.status === "drifted").length;
+      return { c, total: direct.length, drifted };
+    });
   return (
     <section className="mt-8">
       <div className="mb-3 flex items-end justify-between">
@@ -280,17 +283,6 @@ function CollectionsSummary() {
   );
 }
 
-// Local hooks to avoid top-of-file churn
-function useStoreCollections() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useStore } = require("@/lib/store") as typeof import("@/lib/store");
-  return useStore((s) => s.collections);
-}
-function useStoreEndpoints() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useStore } = require("@/lib/store") as typeof import("@/lib/store");
-  return useStore((s) => s.endpoints);
-}
 
 
 // ─── Subcomponents ───────────────────────────────────────────────────────
