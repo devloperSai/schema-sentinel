@@ -1,35 +1,42 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Check, RefreshCcw, Minus, Plus, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Check, RefreshCcw, Minus, Plus, ArrowRightLeft, Pencil } from "lucide-react";
 import { AppShell, MethodBadge, SeverityBadge, StatusDot } from "@/components/app/AppShell";
-import { mockEndpoints, mockDrifts, timeAgo, type DriftLog, type ChangeType } from "@/lib/mock";
+import { EndpointsWorkspace } from "@/components/app/EndpointsWorkspace";
+import { mockDrifts, timeAgo, type DriftLog, type ChangeType } from "@/lib/mock";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/endpoints/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — SchemaGuard` }] }),
-  loader: ({ params }) => {
-    const ep = mockEndpoints.find((e) => e.id === params.id);
-    if (!ep) throw notFound();
-    return { ep };
-  },
   component: EndpointDetail,
   notFoundComponent: () => <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Endpoint not found.</div>,
 });
 
 function EndpointDetail() {
-  const { ep } = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const ep = useStore((s) => s.endpoints.find((e) => e.id === id));
+  if (!ep) throw notFound();
   const initial = mockDrifts.filter((d) => d.endpointId === ep.id);
   const [logs, setLogs] = useState<DriftLog[]>(initial);
 
-  const update = (id: string, status: DriftLog["status"]) =>
-    setLogs((xs) => xs.map((d) => (d.id === id ? { ...d, status } : d)));
+  const update = (lid: string, status: DriftLog["status"]) =>
+    setLogs((xs) => xs.map((d) => (d.id === lid ? { ...d, status } : d)));
 
   return (
     <AppShell title={ep.name} subtitle={ep.url}
       actions={
-        <Link to="/endpoints" className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-3.5" /> Back
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/endpoints/$id/edit" params={{ id: ep.id }}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
+            <Pencil className="size-3.5" /> Edit
+          </Link>
+          <Link to="/endpoints" className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-3.5" /> Back
+          </Link>
+        </div>
       }>
+      <EndpointsWorkspace>
+
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Meta label="Status" value={<span className="flex items-center gap-2"><StatusDot status={ep.status} /><span className="capitalize">{ep.status}</span></span>} />
@@ -97,10 +104,12 @@ function EndpointDetail() {
             </article>
           ))}
         </div>
-      </section>
+        </section>
+      </EndpointsWorkspace>
     </AppShell>
   );
 }
+
 
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {
   return (

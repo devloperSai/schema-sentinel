@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Shield, LayoutDashboard, Network, Bell, LogOut, Activity } from "lucide-react";
+import { Shield, LayoutDashboard, Network, Bell, LogOut, Activity, Globe2 } from "lucide-react";
 import { auth } from "@/lib/mock";
 import type { ReactNode } from "react";
 
@@ -7,6 +7,7 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/endpoints", label: "Endpoints", icon: Network },
   { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/environments", label: "Environments", icon: Globe2 },
 ] as const;
 
 export function AppShell({ children, title, subtitle, actions }: {

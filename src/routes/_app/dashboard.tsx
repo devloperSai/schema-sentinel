@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { AppShell, StatusDot, MethodBadge, SeverityBadge } from "@/components/app/AppShell";
 import { mockEndpoints, mockDrifts, timeAgo, type DriftLog, type Severity } from "@/lib/mock";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — SchemaGuard" }] }),
@@ -238,9 +239,51 @@ function DashboardPage() {
           </div>
         </div>
       </section>
+
+      <CollectionsSummary />
     </AppShell>
   );
 }
+
+function CollectionsSummary() {
+  const collections = useStore((s) => s.collections);
+  const endpoints = useStore((s) => s.endpoints);
+  const counts = collections
+    .filter((c) => c.parentId === null)
+    .map((c) => {
+      const direct = endpoints.filter((e) => e.collectionId === c.id);
+      const drifted = direct.filter((e) => e.status === "drifted").length;
+      return { c, total: direct.length, drifted };
+    });
+  return (
+    <section className="mt-8">
+      <div className="mb-3 flex items-end justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-tight">Collections</h2>
+          <span className="text-mono text-[10px] uppercase tracking-widest text-muted-foreground">{collections.length} groups</span>
+        </div>
+        <Link to="/endpoints" className="text-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground">manage →</Link>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {counts.map(({ c, total, drifted }) => (
+          <Link key={c.id} to="/endpoints"
+            className="group rounded-lg border border-border/60 bg-surface-2/40 p-4 transition-colors hover:border-brand/30 hover:bg-surface-2/70">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold tracking-tight">{c.name}</div>
+              {drifted > 0 && <span className="text-mono inline-flex h-5 items-center rounded border border-danger/30 bg-danger/10 px-1.5 text-[10px] font-semibold text-danger">{drifted} drift</span>}
+            </div>
+            <div className="mt-3 flex items-baseline gap-1.5">
+              <span className="text-2xl font-semibold tabular-nums">{total}</span>
+              <span className="text-mono text-[10px] uppercase tracking-widest text-muted-foreground">endpoints</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
 
 // ─── Subcomponents ───────────────────────────────────────────────────────
 import { Network } from "lucide-react";
