@@ -104,10 +104,12 @@ function EndpointDetail() {
             </article>
           ))}
         </div>
-      </section>
+        </section>
+      </EndpointsWorkspace>
     </AppShell>
   );
 }
+
 
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {
   return (
