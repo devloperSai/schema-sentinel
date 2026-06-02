@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Pause, Play, Trash2, ExternalLink, Pencil, FolderTree } from "lucide-react";
+import { Plus, Pause, Play, Trash2, ExternalLink, Pencil, FolderTree, FolderPlus, FilePlus2, Sparkles } from "lucide-react";
 import { AppShell, StatusDot, MethodBadge } from "@/components/app/AppShell";
 import { EndpointsWorkspace } from "@/components/app/EndpointsWorkspace";
 import { timeAgo } from "@/lib/mock";
 import { useStore, store } from "@/lib/store";
+
 
 export const Route = createFileRoute("/_app/endpoints")({
   head: () => ({ meta: [{ title: "Endpoints — SchemaGuard" }] }),
