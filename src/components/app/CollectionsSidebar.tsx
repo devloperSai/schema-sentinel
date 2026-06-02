@@ -254,7 +254,7 @@ function CtxItem({ icon: Icon, label, onClick, danger }: {
   );
 }
 
-function TreeNode({ col, depth, collections, endpoints, filtered, onContext, currentPath }: {
+function TreeNode({ col, depth, collections, endpoints, filtered, onContext, currentPath, onAddEndpoint }: {
   col: Collection;
   depth: number;
   collections: Collection[];
@@ -262,6 +262,7 @@ function TreeNode({ col, depth, collections, endpoints, filtered, onContext, cur
   filtered: { matchedEpIds: Set<string>; keepCols: Set<string> } | null;
   onContext: (e: MouseEvent, kind: "collection" | "endpoint", id: string) => void;
   currentPath: string;
+  onAddEndpoint: (collectionId: string) => void;
 }) {
   if (filtered && !filtered.keepCols.has(col.id)) return null;
 
@@ -278,15 +279,22 @@ function TreeNode({ col, depth, collections, endpoints, filtered, onContext, cur
         onClick={() => store.toggleCollection(col.id)}
         onContextMenu={(e) => onContext(e, "collection", col.id)}
         style={{ paddingLeft: 6 + indent }}
-        className="group flex h-7 cursor-pointer items-center gap-1.5 rounded-md pr-2 text-xs font-medium text-foreground/90 hover:bg-accent/40"
+        className="group flex h-7 cursor-pointer items-center gap-1.5 rounded-md pr-1 text-xs font-medium text-foreground/90 hover:bg-accent/40"
       >
         <ChevronRight className={`size-3 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
         {isOpen ? <FolderOpen className="size-3.5 text-brand/80" /> : <Folder className="size-3.5 text-muted-foreground" />}
         <span className="truncate">{col.name}</span>
-        <span className="text-mono ml-auto text-[10px] text-muted-foreground/70">{ownEps.length}</span>
+        <span className="text-mono ml-auto text-[10px] text-muted-foreground/70 group-hover:hidden">{ownEps.length}</span>
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddEndpoint(col.id); }}
+          className="ml-auto hidden size-5 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground group-hover:grid"
+          aria-label="New endpoint in collection"
+          title="New endpoint here">
+          <Plus className="size-3" />
+        </button>
         <button
           onClick={(e) => { e.stopPropagation(); onContext(e, "collection", col.id); }}
-          className="invisible grid size-5 place-items-center rounded text-muted-foreground hover:bg-accent group-hover:visible"
+          className="invisible grid size-5 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground group-hover:visible"
           aria-label="Menu">
           <MoreHorizontal className="size-3" />
         </button>
@@ -296,16 +304,26 @@ function TreeNode({ col, depth, collections, endpoints, filtered, onContext, cur
         <>
           {children.map((c) => (
             <TreeNode key={c.id} col={c} depth={depth + 1} collections={collections} endpoints={endpoints}
-              filtered={filtered} onContext={onContext} currentPath={currentPath} />
+              filtered={filtered} onContext={onContext} currentPath={currentPath} onAddEndpoint={onAddEndpoint} />
           ))}
           {visibleEps.map((ep) => (
             <EndpointItem key={ep.id} ep={ep} depth={depth + 1} active={currentPath.includes(ep.id)} onContext={onContext} />
           ))}
+          {ownEps.length === 0 && !filtered && (
+            <button
+              onClick={() => onAddEndpoint(col.id)}
+              style={{ paddingLeft: 24 + indent }}
+              className="text-mono flex h-6 w-full items-center gap-1 rounded-md pr-2 text-left text-[10px] text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground"
+            >
+              <Plus className="size-3" /> Add request
+            </button>
+          )}
         </>
       )}
     </div>
   );
 }
+
 
 function EndpointItem({ ep, depth, active, onContext }: {
   ep: EndpointConfig;
