@@ -28,6 +28,7 @@ function EndpointsPage() {
         </Link>
       }>
       <EndpointsWorkspace>
+        <WelcomePanel total={endpoints.length} collections={collections.length} />
         <ListView
           endpoints={visible}
           filterCol={filterCol}
@@ -36,6 +37,7 @@ function EndpointsPage() {
           colName={colName}
         />
       </EndpointsWorkspace>
+
     </AppShell>
   );
 }
