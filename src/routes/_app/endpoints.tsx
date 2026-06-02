@@ -124,3 +124,44 @@ function ListView({
     </>
   );
 }
+
+function WelcomePanel({ total, collections }: { total: number; collections: number }) {
+  return (
+    <div className="mb-5 overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-surface-2/60 to-surface-2/20 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="grid size-9 place-items-center rounded-md border border-brand/30 bg-brand/10 text-brand">
+            <Sparkles className="size-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight">Build a request</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Organize endpoints in collections, configure auth & headers, then let SchemaGuard watch for drift.
+            </p>
+            <div className="text-mono mt-2 flex gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span>{total} endpoints</span>
+              <span>·</span>
+              <span>{collections} collections</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const name = prompt("Collection name", "New collection");
+              if (name) store.addCollection(null, name);
+            }}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-foreground hover:bg-accent"
+          >
+            <FolderPlus className="size-3.5" /> New collection
+          </button>
+          <Link to="/endpoints/new"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-foreground px-3 text-xs font-semibold text-background hover:bg-white">
+            <FilePlus2 className="size-3.5" /> New endpoint
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
