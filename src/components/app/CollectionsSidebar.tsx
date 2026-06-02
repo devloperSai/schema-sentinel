@@ -106,13 +106,14 @@ export function CollectionsSidebar() {
           {overflow && (
             <div className="absolute right-0 top-8 z-50 w-52 overflow-hidden rounded-md border border-border bg-popover shadow-elevated animate-fade-in">
               <CtxItem icon={FolderOpen} label="Expand all" onClick={() => {
-                state().collections.forEach((c) => { if (!c.expanded) store.toggleCollection(c.id); });
+                collections.forEach((c) => { if (!c.expanded) store.toggleCollection(c.id); });
                 setOverflow(false);
               }} />
               <CtxItem icon={Folder} label="Collapse all" onClick={() => {
-                state().collections.forEach((c) => { if (c.expanded) store.toggleCollection(c.id); });
+                collections.forEach((c) => { if (c.expanded) store.toggleCollection(c.id); });
                 setOverflow(false);
               }} />
+
             </div>
           )}
         </div>
