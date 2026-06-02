@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useRef, useState, useEffect, type MouseEvent } from "react";
 import {
-  ChevronRight, FolderPlus, Plus, Search, Folder, FolderOpen, MoreHorizontal,
+  ChevronRight, ChevronDown, FolderPlus, Plus, Search, Folder, FolderOpen, MoreHorizontal,
   LayoutDashboard, Bell, Globe2, Trash2, Pencil, FilePlus2,
 } from "lucide-react";
 import { StatusDot, MethodBadge } from "@/components/app/AppShell";
@@ -46,58 +46,137 @@ export function CollectionsSidebar() {
     setCtx({ x: e.clientX, y: e.clientY, nodeKind, id });
   };
 
+  // close menus on outside click
+  const [addMenu, setAddMenu] = useState(false);
+  const [overflow, setOverflow] = useState(false);
+  const [colsOpen, setColsOpen] = useState(true);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const close = () => { setAddMenu(false); setOverflow(false); };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
+
+  const newCollectionFlow = () => {
+    const name = prompt("Collection name", "New collection");
+    if (name) store.addCollection(null, name);
+  };
+  const newEndpointFlow = (colId: string | null = null) => {
+    navigate({ to: "/endpoints/new", search: colId ? { collection: colId } : {} });
+  };
+
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border/60 bg-surface-2/30">
-      {/* Search */}
-      <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5">
+      {/* Search row */}
+      <div className="flex items-center gap-1.5 border-b border-border/60 px-2.5 py-2">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search collections, endpoints"
+            placeholder="Search"
             className="text-mono h-7 w-full rounded-md border border-border bg-surface-2/60 pl-7 pr-2 text-[11px] outline-none placeholder:text-muted-foreground/60 focus:border-brand/50"
           />
         </div>
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => { setAddMenu((v) => !v); setOverflow(false); }}
+            aria-label="Create new"
+            title="New…"
+            className="grid size-7 place-items-center rounded-md border border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+          >
+            <Plus className="size-3.5" />
+          </button>
+          {addMenu && (
+            <div className="absolute right-0 top-8 z-50 w-48 overflow-hidden rounded-md border border-border bg-popover shadow-elevated animate-fade-in">
+              <CtxItem icon={FolderPlus} label="New collection" onClick={() => { newCollectionFlow(); setAddMenu(false); }} />
+              <CtxItem icon={FilePlus2} label="New endpoint" onClick={() => { newEndpointFlow(null); setAddMenu(false); }} />
+            </div>
+          )}
+        </div>
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => { setOverflow((v) => !v); setAddMenu(false); }}
+            aria-label="More"
+            title="More"
+            className="grid size-7 place-items-center rounded-md border border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+          >
+            <MoreHorizontal className="size-3.5" />
+          </button>
+          {overflow && (
+            <div className="absolute right-0 top-8 z-50 w-52 overflow-hidden rounded-md border border-border bg-popover shadow-elevated animate-fade-in">
+              <CtxItem icon={FolderOpen} label="Expand all" onClick={() => {
+                collections.forEach((c) => { if (!c.expanded) store.toggleCollection(c.id); });
+                setOverflow(false);
+              }} />
+              <CtxItem icon={Folder} label="Collapse all" onClick={() => {
+                collections.forEach((c) => { if (c.expanded) store.toggleCollection(c.id); });
+                setOverflow(false);
+              }} />
+
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* COLLECTIONS section header */}
+      <div
+        ref={wrapRef}
+        className="flex items-center justify-between border-b border-border/40 px-3 pb-1.5 pt-2"
+      >
         <button
-          onClick={() => store.addCollection(null)}
-          aria-label="New collection"
-          title="New collection"
-          className="grid size-7 place-items-center rounded-md border border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+          onClick={() => setColsOpen((v) => !v)}
+          className="text-mono flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
         >
-          <FolderPlus className="size-3.5" />
+          {colsOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+          Collections
         </button>
+        <span className="text-mono text-[10px] text-muted-foreground/60">{roots.length}</span>
       </div>
 
       {/* Tree */}
-      <div
-        className="flex-1 overflow-y-auto px-1.5 py-2 text-sm"
-        onContextMenu={(e) => onContext(e, "root", null)}
-        onClick={() => setCtx(null)}
-      >
-        {roots.map((c) => (
-          <TreeNode
-            key={c.id} col={c} depth={0}
-            collections={collections} endpoints={endpoints}
-            filtered={filtered}
-            onContext={onContext}
-            currentPath={pathname}
-          />
-        ))}
+      {colsOpen && (
+        <div
+          className="flex-1 overflow-y-auto px-1.5 py-1.5 text-sm"
+          onContextMenu={(e) => onContext(e, "root", null)}
+          onClick={() => setCtx(null)}
+        >
+          {roots.map((c) => (
+            <TreeNode
+              key={c.id} col={c} depth={0}
+              collections={collections} endpoints={endpoints}
+              filtered={filtered}
+              onContext={onContext}
+              currentPath={pathname}
+              onAddEndpoint={(cid) => newEndpointFlow(cid)}
+            />
+          ))}
 
-        {orphans.length > 0 && (
-          <div className="mt-3 border-t border-border/40 pt-2">
-            <div className="text-mono px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">Unassigned</div>
-            {orphans
-              .filter((e) => !filtered || filtered.matchedEpIds.has(e.id))
-              .map((e) => <EndpointItem key={e.id} ep={e} depth={0} active={pathname.includes(e.id)} onContext={onContext} />)}
-          </div>
-        )}
+          {orphans.length > 0 && (
+            <div className="mt-3 border-t border-border/40 pt-2">
+              <div className="text-mono px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">Unassigned</div>
+              {orphans
+                .filter((e) => !filtered || filtered.matchedEpIds.has(e.id))
+                .map((e) => <EndpointItem key={e.id} ep={e} depth={0} active={pathname.includes(e.id)} onContext={onContext} />)}
+            </div>
+          )}
 
-        {filtered && roots.every((c) => !filtered.keepCols.has(c.id)) && orphans.every((e) => !filtered.matchedEpIds.has(e.id)) && (
-          <p className="px-3 py-6 text-center text-xs text-muted-foreground">No matches for "{q}"</p>
-        )}
-      </div>
+          {filtered && roots.every((c) => !filtered.keepCols.has(c.id)) && orphans.every((e) => !filtered.matchedEpIds.has(e.id)) && (
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">No matches for "{q}"</p>
+          )}
+
+          {roots.length === 0 && orphans.length === 0 && (
+            <button
+              onClick={newCollectionFlow}
+              className="mx-2 mt-3 flex w-[calc(100%-1rem)] flex-col items-center gap-1 rounded-md border border-dashed border-border bg-surface-2/30 px-3 py-6 text-xs text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
+            >
+              <FolderPlus className="size-4" />
+              Create your first collection
+            </button>
+          )}
+        </div>
+      )}
+
 
       {/* Bottom nav */}
       <div className="border-t border-border/60 p-2">
@@ -175,7 +254,7 @@ function CtxItem({ icon: Icon, label, onClick, danger }: {
   );
 }
 
-function TreeNode({ col, depth, collections, endpoints, filtered, onContext, currentPath }: {
+function TreeNode({ col, depth, collections, endpoints, filtered, onContext, currentPath, onAddEndpoint }: {
   col: Collection;
   depth: number;
   collections: Collection[];
@@ -183,6 +262,7 @@ function TreeNode({ col, depth, collections, endpoints, filtered, onContext, cur
   filtered: { matchedEpIds: Set<string>; keepCols: Set<string> } | null;
   onContext: (e: MouseEvent, kind: "collection" | "endpoint", id: string) => void;
   currentPath: string;
+  onAddEndpoint: (collectionId: string) => void;
 }) {
   if (filtered && !filtered.keepCols.has(col.id)) return null;
 
@@ -199,15 +279,22 @@ function TreeNode({ col, depth, collections, endpoints, filtered, onContext, cur
         onClick={() => store.toggleCollection(col.id)}
         onContextMenu={(e) => onContext(e, "collection", col.id)}
         style={{ paddingLeft: 6 + indent }}
-        className="group flex h-7 cursor-pointer items-center gap-1.5 rounded-md pr-2 text-xs font-medium text-foreground/90 hover:bg-accent/40"
+        className="group flex h-7 cursor-pointer items-center gap-1.5 rounded-md pr-1 text-xs font-medium text-foreground/90 hover:bg-accent/40"
       >
         <ChevronRight className={`size-3 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
         {isOpen ? <FolderOpen className="size-3.5 text-brand/80" /> : <Folder className="size-3.5 text-muted-foreground" />}
         <span className="truncate">{col.name}</span>
-        <span className="text-mono ml-auto text-[10px] text-muted-foreground/70">{ownEps.length}</span>
+        <span className="text-mono ml-auto text-[10px] text-muted-foreground/70 group-hover:hidden">{ownEps.length}</span>
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddEndpoint(col.id); }}
+          className="ml-auto hidden size-5 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground group-hover:grid"
+          aria-label="New endpoint in collection"
+          title="New endpoint here">
+          <Plus className="size-3" />
+        </button>
         <button
           onClick={(e) => { e.stopPropagation(); onContext(e, "collection", col.id); }}
-          className="invisible grid size-5 place-items-center rounded text-muted-foreground hover:bg-accent group-hover:visible"
+          className="invisible grid size-5 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground group-hover:visible"
           aria-label="Menu">
           <MoreHorizontal className="size-3" />
         </button>
@@ -217,16 +304,26 @@ function TreeNode({ col, depth, collections, endpoints, filtered, onContext, cur
         <>
           {children.map((c) => (
             <TreeNode key={c.id} col={c} depth={depth + 1} collections={collections} endpoints={endpoints}
-              filtered={filtered} onContext={onContext} currentPath={currentPath} />
+              filtered={filtered} onContext={onContext} currentPath={currentPath} onAddEndpoint={onAddEndpoint} />
           ))}
           {visibleEps.map((ep) => (
             <EndpointItem key={ep.id} ep={ep} depth={depth + 1} active={currentPath.includes(ep.id)} onContext={onContext} />
           ))}
+          {ownEps.length === 0 && !filtered && (
+            <button
+              onClick={() => onAddEndpoint(col.id)}
+              style={{ paddingLeft: 24 + indent }}
+              className="text-mono flex h-6 w-full items-center gap-1 rounded-md pr-2 text-left text-[10px] text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground"
+            >
+              <Plus className="size-3" /> Add request
+            </button>
+          )}
         </>
       )}
     </div>
   );
 }
+
 
 function EndpointItem({ ep, depth, active, onContext }: {
   ep: EndpointConfig;
