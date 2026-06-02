@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useRef, useState, useEffect, type MouseEvent } from "react";
 import {
-  ChevronRight, FolderPlus, Plus, Search, Folder, FolderOpen, MoreHorizontal,
+  ChevronRight, ChevronDown, FolderPlus, Plus, Search, Folder, FolderOpen, MoreHorizontal,
   LayoutDashboard, Bell, Globe2, Trash2, Pencil, FilePlus2,
 } from "lucide-react";
 import { StatusDot, MethodBadge } from "@/components/app/AppShell";
