@@ -1,5 +1,5 @@
 // Mock data + auth helpers (frontend-only). Replace with real API later.
-export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
 export type EndpointStatus = "healthy" | "drifted" | "paused";
 export type Severity = "low" | "medium" | "high" | "critical";
 export type AlertStatus = "unacknowledged" | "acknowledged" | "resolved";
