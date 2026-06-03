@@ -87,15 +87,19 @@ export function StatusDot({ status }: { status: "healthy" | "drifted" | "paused"
   return <span className={`inline-block size-2 rounded-full ${cfg}`} />;
 }
 
+/** Postman-style method colors. */
+export const METHOD_COLOR: Record<string, string> = {
+  GET: "text-teal-300",
+  POST: "text-amber-300",
+  PUT: "text-sky-300",
+  PATCH: "text-violet-300",
+  DELETE: "text-rose-300",
+  HEAD: "text-cyan-300",
+  OPTIONS: "text-pink-300",
+};
 export function MethodBadge({ method }: { method: string }) {
-  const color = {
-    GET: "text-sky-300 bg-sky-500/10 border-sky-500/20",
-    POST: "text-emerald-300 bg-emerald-500/10 border-emerald-500/20",
-    PUT: "text-amber-300 bg-amber-500/10 border-amber-500/20",
-    PATCH: "text-violet-300 bg-violet-500/10 border-violet-500/20",
-    DELETE: "text-rose-300 bg-rose-500/10 border-rose-500/20",
-  }[method] ?? "text-muted-foreground bg-muted border-border";
-  return <span className={`text-mono inline-flex h-5 items-center rounded border px-1.5 text-[10px] font-semibold tracking-wider ${color}`}>{method}</span>;
+  const cls = METHOD_COLOR[method] ?? "text-muted-foreground";
+  return <span className={`text-mono inline-flex h-5 items-center text-[10px] font-bold tracking-wider ${cls}`}>{method}</span>;
 }
 
 export function SeverityBadge({ severity }: { severity: "low" | "medium" | "high" | "critical" }) {
