@@ -2,9 +2,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Save, Send, Plus, Trash2, X, ArrowLeft, ChevronRight, Eye, EyeOff,
-  Info, FileText, Code2, Settings2, Cookie, ShieldCheck, KeyRound,
-  ListTree, Braces, FileJson, AlignLeft,
+  Save, Send, Trash2, X, ArrowLeft, ChevronRight, Eye, EyeOff,
+  Info, FileText, Code2, Settings2, Cookie, ShieldCheck, KeyRound, AlignLeft,
 } from "lucide-react";
 import { AppShell, METHOD_COLOR } from "@/components/app/AppShell";
 import { EndpointsWorkspace } from "@/components/app/EndpointsWorkspace";
