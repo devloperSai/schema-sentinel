@@ -811,10 +811,22 @@ function CountPill({ children }: { children: React.ReactNode }) {
   return <span className="text-mono inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-semibold tracking-wider text-foreground/80">{children}</span>;
 }
 function StatusBadge({ status }: { status: number }) {
-  const ok = status < 300;
-  const cls = ok ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20" : "text-rose-300 bg-rose-500/10 border-rose-500/20";
-  const label = ok ? "OK" : "ERR";
+  const cls =
+    status < 300 ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20" :
+    status < 400 ? "text-amber-300 bg-amber-500/10 border-amber-500/20" :
+                   "text-rose-300 bg-rose-500/10 border-rose-500/20";
+  const label = STATUS_TEXT[status] ?? (status < 300 ? "OK" : "Error");
   return <span className={`text-mono inline-flex h-5 items-center rounded border px-1.5 text-[10px] font-semibold tracking-wider ${cls}`}>{status} {label}</span>;
+}
+
+/** Render URL with {{var}} tokens highlighted (used as transparent-text overlay). */
+function highlightVars(url: string): React.ReactNode {
+  const parts = url.split(/(\{\{\w+\}\})/g);
+  return parts.map((p, i) =>
+    /^\{\{\w+\}\}$/.test(p)
+      ? <span key={i} style={{ color: "oklch(0.75 0.15 60)", WebkitTextFillColor: "oklch(0.75 0.15 60)" }}>{p}</span>
+      : <span key={i} style={{ color: "var(--foreground)", WebkitTextFillColor: "var(--foreground)" }}>{p}</span>
+  );
 }
 
 // ─── JSON tree (pretty) ─────────────────────────────────────────────────────
