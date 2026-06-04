@@ -1,59 +1,48 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Check, RefreshCcw, Minus, Plus, ArrowRightLeft, Pencil } from "lucide-react";
-import { AppShell, MethodBadge, SeverityBadge, StatusDot } from "@/components/app/AppShell";
-import { EndpointsWorkspace } from "@/components/app/EndpointsWorkspace";
-import { mockDrifts, timeAgo, type DriftLog, type ChangeType } from "@/lib/mock";
+import { Check, RefreshCcw, Minus, Plus, ArrowRightLeft, ChevronDown, Activity } from "lucide-react";
+import { SeverityBadge } from "@/components/app/AppShell";
+import { EndpointBuilder } from "@/components/app/EndpointBuilder";
+import { mockDrifts, type DriftLog, type ChangeType } from "@/lib/mock";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/endpoints/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — SchemaGuard` }] }),
   component: EndpointDetail,
-  notFoundComponent: () => <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Endpoint not found.</div>,
+  notFoundComponent: () => (
+    <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Endpoint not found.</div>
+  ),
 });
 
 function EndpointDetail() {
   const { id } = Route.useParams();
   const ep = useStore((s) => s.endpoints.find((e) => e.id === id));
   if (!ep) throw notFound();
-  const initial = mockDrifts.filter((d) => d.endpointId === ep.id);
-  const [logs, setLogs] = useState<DriftLog[]>(initial);
+  return <EndpointBuilder initial={ep} footer={<DriftHistory endpointId={ep.id} />} />;
+}
 
+function DriftHistory({ endpointId }: { endpointId: string }) {
+  const initial = mockDrifts.filter((d) => d.endpointId === endpointId);
+  const [logs, setLogs] = useState<DriftLog[]>(initial);
+  const [open, setOpen] = useState(false);
   const update = (lid: string, status: DriftLog["status"]) =>
     setLogs((xs) => xs.map((d) => (d.id === lid ? { ...d, status } : d)));
 
   return (
-    <AppShell title={ep.name} subtitle={ep.url}
-      actions={
-        <div className="flex gap-2">
-          <Link to="/endpoints/$id/edit" params={{ id: ep.id }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
-            <Pencil className="size-3.5" /> Edit
-          </Link>
-          <Link to="/endpoints" className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-3.5" /> Back
-          </Link>
+    <section className="mt-8 overflow-hidden rounded-lg border border-border/60 bg-surface-2/40">
+      <button onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between border-b border-border/60 px-4 py-2.5 hover:bg-accent/20">
+        <div className="flex items-center gap-2">
+          <ChevronDown className={`size-3 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`} />
+          <Activity className="size-3.5 text-brand" />
+          <h2 className="text-sm font-semibold tracking-tight">Drift history</h2>
+          <span className="text-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {logs.length} event{logs.length === 1 ? "" : "s"}
+          </span>
         </div>
-      }>
-      <EndpointsWorkspace>
-
-
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Meta label="Status" value={<span className="flex items-center gap-2"><StatusDot status={ep.status} /><span className="capitalize">{ep.status}</span></span>} />
-        <Meta label="Method" value={<MethodBadge method={ep.method} />} />
-        <Meta label="Interval" value={<span className="text-mono text-sm">{ep.intervalMin} min</span>} />
-        <Meta label="Last check" value={<span className="text-mono text-sm">{timeAgo(ep.lastCheckedAt)}</span>} />
-      </section>
-
-      <section className="mt-8">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <h2 className="text-sm font-semibold tracking-tight">Drift history</h2>
-            <span className="text-mono text-[10px] uppercase tracking-widest text-muted-foreground">{logs.length} event{logs.length === 1 ? "" : "s"}</span>
-          </div>
-        </div>
-
-        <div className="space-y-4">
+      </button>
+      {open && (
+        <div className="space-y-4 p-4">
           {logs.length === 0 && (
             <div className="rounded-lg border border-border/60 bg-surface-2/40 px-4 py-10 text-center text-sm text-muted-foreground">
               No drift detected. Baseline holds.
@@ -104,19 +93,8 @@ function EndpointDetail() {
             </article>
           ))}
         </div>
-        </section>
-      </EndpointsWorkspace>
-    </AppShell>
-  );
-}
-
-
-function Meta({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-border/60 bg-surface-2/40 p-4">
-      <div className="text-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-2">{value}</div>
-    </div>
+      )}
+    </section>
   );
 }
 
