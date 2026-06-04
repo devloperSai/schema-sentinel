@@ -41,6 +41,12 @@ export function EndpointBuilder({ initial }: { initial: EndpointConfig }) {
   const activeEnvId = useStore((s) => s.activeEnvId);
   const activeEnv = environments.find((e) => e.id === activeEnvId);
 
+export function EndpointBuilder({ initial, footer }: { initial: EndpointConfig; footer?: React.ReactNode }) {
+  const navigate = useNavigate();
+  const environments = useStore((s) => s.environments);
+  const activeEnvId = useStore((s) => s.activeEnvId);
+  const activeEnv = environments.find((e) => e.id === activeEnvId);
+
   const [draft, setDraft] = useState<EndpointConfig>(initial);
   const [tab, setTab] = useState<Tab>("Params");
   const [scriptTab, setScriptTab] = useState<"pre" | "post">("pre");
@@ -52,8 +58,23 @@ export function EndpointBuilder({ initial }: { initial: EndpointConfig }) {
   const [testing, setTesting] = useState(false);
   const [response, setResponse] = useState<null | {
     status: number; time: number; size: string; body: string; headers: Record<string, string>;
+    tests: { name: string; pass: boolean }[];
   }>(null);
-  const [respTab, setRespTab] = useState<"Pretty" | "Raw" | "Headers">("Pretty");
+  const [respTab, setRespTab] = useState<"Pretty" | "Raw" | "Headers" | "Test Results">("Pretty");
+  const [schemaOpen, setSchemaOpen] = useState(true);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [customMethod, setCustomMethod] = useState("");
+  const methodRef = useRef<HTMLDivElement>(null);
+  const sendRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (methodRef.current && !methodRef.current.contains(e.target as Node)) setMethodOpen(false);
+      if (sendRef.current && !sendRef.current.contains(e.target as Node)) setSendOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
 
   // Sync params <-> URL on mount
   useEffect(() => {
