@@ -165,7 +165,7 @@ export function EndpointBuilder({ initial, footer }: { initial: EndpointConfig; 
         </Link>
       }>
       <EndpointsWorkspace>
-        {/* ── Breadcrumb + Save/Send bar ─────────────────────────────── */}
+        {/* ── Breadcrumb + Save/Share bar ─────────────────────────────── */}
         <div className="flex items-center justify-between border-b border-border/60 pb-3">
           <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span>SchemaGuard</span>
@@ -178,39 +178,92 @@ export function EndpointBuilder({ initial, footer }: { initial: EndpointConfig; 
             />
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => navigator.clipboard?.writeText(window.location.href)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
+              <Share2 className="size-3.5" /> Share
+            </button>
             <button onClick={save}
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 text-xs font-semibold text-foreground hover:bg-accent">
               <Save className="size-3.5" /> Save
             </button>
-            <button onClick={runTest} disabled={testing}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-brand px-3 text-xs font-semibold text-brand-foreground hover:brightness-110 disabled:opacity-50">
-              <Send className="size-3.5" /> {testing ? "Sending…" : "Send"}
-            </button>
           </div>
         </div>
 
-        {/* ── URL bar ─────────────────────────────────────────────────── */}
-        <div className="mt-4 flex items-stretch overflow-hidden rounded-md border border-border bg-surface-2/60 focus-within:border-brand/50">
-          <div className="relative">
-            <select
-              value={draft.method}
-              onChange={(e) => setDraft((d) => ({ ...d, method: e.target.value as Method }))}
-              className={`text-mono h-10 cursor-pointer appearance-none border-r border-border bg-transparent pl-3 pr-7 text-[12px] font-bold tracking-wider outline-none ${METHOD_COLOR[draft.method] ?? ""}`}
-            >
-              {METHODS.map((m) => <option key={m} value={m} className="bg-background">{m}</option>)}
-            </select>
-            <ChevronRight className="pointer-events-none absolute right-1.5 top-1/2 size-3 -translate-y-1/2 rotate-90 text-muted-foreground" />
+        {/* ── URL bar (Postman-style) ─────────────────────────────────── */}
+        <div className="mt-4 flex items-stretch overflow-visible rounded-md border border-border bg-surface-2/60 focus-within:border-brand/50">
+          {/* Method dropdown (custom) */}
+          <div ref={methodRef} className="relative">
+            <button type="button" onClick={() => setMethodOpen((v) => !v)}
+              className={`text-mono inline-flex h-10 items-center gap-1.5 border-r border-border bg-transparent px-3 text-[12px] font-bold tracking-wider outline-none hover:bg-accent/30 ${METHOD_COLOR[draft.method] ?? "text-foreground"}`}>
+              {draft.method}
+              <ChevronDown className="size-3 text-muted-foreground" />
+            </button>
+            {methodOpen && (
+              <div className="absolute left-0 top-11 z-20 w-56 overflow-hidden rounded-md border border-border bg-popover shadow-xl animate-fade-in">
+                <div className="text-mono border-b border-border/60 bg-surface-2/40 px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  HTTP method
+                </div>
+                {METHODS.map((m) => (
+                  <button key={m} onClick={() => { setDraft((d) => ({ ...d, method: m })); setMethodOpen(false); }}
+                    className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[12px] hover:bg-accent ${
+                      draft.method === m ? "bg-accent/50" : ""
+                    }`}>
+                    <span className={`text-mono font-bold tracking-wider ${METHOD_COLOR[m]}`}>{m}</span>
+                    {draft.method === m && <CheckCircle2 className="size-3 text-brand" />}
+                  </button>
+                ))}
+                <div className="border-t border-border/60 p-2">
+                  <input
+                    value={customMethod}
+                    onChange={(e) => setCustomMethod(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customMethod.trim()) {
+                        setDraft((d) => ({ ...d, method: customMethod.trim() as Method }));
+                        setCustomMethod(""); setMethodOpen(false);
+                      }
+                    }}
+                    placeholder="Type a new method"
+                    className="text-mono h-7 w-full rounded border border-border bg-surface-2/60 px-2 text-[11px] outline-none focus:border-brand/50"
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          <input
-            value={draft.url}
-            onChange={(e) => onUrlChange(e.target.value)}
-            placeholder="{{BASE_URL}}/v2/resource"
-            className="text-mono h-10 w-full bg-transparent px-3 text-xs outline-none placeholder:text-muted-foreground/50"
-          />
-          <button onClick={runTest} disabled={testing}
-            className="inline-flex items-center gap-1.5 border-l border-border bg-brand/10 px-4 text-xs font-semibold text-brand transition-colors hover:bg-brand/20 disabled:opacity-50">
-            <Send className="size-3.5" /> Send
-          </button>
+
+          {/* URL input with {{var}} highlight overlay */}
+          <div className="relative flex-1">
+            <div aria-hidden
+              className="text-mono pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre px-3 text-xs text-transparent">
+              {highlightVars(draft.url)}
+            </div>
+            <input
+              value={draft.url}
+              onChange={(e) => onUrlChange(e.target.value)}
+              placeholder="{{BASE_URL}}/v2/resource"
+              spellCheck={false}
+              className="text-mono relative h-10 w-full bg-transparent px-3 text-xs caret-foreground outline-none placeholder:text-muted-foreground/50"
+              style={{ color: "transparent", WebkitTextFillColor: "transparent" }}
+            />
+          </div>
+
+          {/* Send (split) */}
+          <div ref={sendRef} className="relative flex">
+            <button onClick={() => runTest(false)} disabled={testing}
+              className="inline-flex items-center gap-1.5 border-l border-border bg-brand px-4 text-xs font-semibold text-brand-foreground transition-colors hover:brightness-110 disabled:opacity-50">
+              <Send className="size-3.5" /> {testing ? "Sending…" : "Send"}
+            </button>
+            <button onClick={() => setSendOpen((v) => !v)} disabled={testing} aria-label="Send options"
+              className="inline-flex w-7 items-center justify-center border-l border-brand-foreground/20 bg-brand text-brand-foreground hover:brightness-110 disabled:opacity-50">
+              <ChevronDown className="size-3" />
+            </button>
+            {sendOpen && (
+              <div className="absolute right-0 top-11 z-20 w-56 overflow-hidden rounded-md border border-border bg-popover shadow-xl animate-fade-in">
+                <button onClick={() => runTest(true)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-accent">
+                  <Download className="size-3.5" /> Send and Download
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Tabs ────────────────────────────────────────────────────── */}
