@@ -35,11 +35,6 @@ const AUTO_HEADERS: KV[] = [
   { id: "_h_conn", key: "Connection", value: "keep-alive", enabled: true },
 ];
 
-export function EndpointBuilder({ initial }: { initial: EndpointConfig }) {
-  const navigate = useNavigate();
-  const environments = useStore((s) => s.environments);
-  const activeEnvId = useStore((s) => s.activeEnvId);
-  const activeEnv = environments.find((e) => e.id === activeEnvId);
 
 export function EndpointBuilder({ initial, footer }: { initial: EndpointConfig; footer?: React.ReactNode }) {
   const navigate = useNavigate();
