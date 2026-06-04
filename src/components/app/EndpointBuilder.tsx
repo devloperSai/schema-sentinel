@@ -1,9 +1,10 @@
 // Postman-style endpoint builder.
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Save, Send, Trash2, X, ArrowLeft, ChevronRight, Eye, EyeOff,
+  Save, Send, Trash2, X, ArrowLeft, ChevronRight, ChevronDown, Eye, EyeOff,
   Info, FileText, Code2, Settings2, Cookie, ShieldCheck, KeyRound, AlignLeft,
+  Share2, Download, MoreHorizontal, CheckCircle2, XCircle, Copy,
 } from "lucide-react";
 import { AppShell, METHOD_COLOR } from "@/components/app/AppShell";
 import { EndpointsWorkspace } from "@/components/app/EndpointsWorkspace";
@@ -16,6 +17,14 @@ import type { Method } from "@/lib/mock";
 type Tab = "Params" | "Authorization" | "Headers" | "Body" | "Scripts" | "Settings" | "Docs" | "Cookies";
 const TABS: Tab[] = ["Params", "Authorization", "Headers", "Body", "Scripts", "Settings", "Docs", "Cookies"];
 const METHODS: Method[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
+
+const STATUS_TEXT: Record<number, string> = {
+  200: "OK", 201: "Created", 202: "Accepted", 204: "No Content",
+  301: "Moved Permanently", 302: "Found", 304: "Not Modified",
+  400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found",
+  409: "Conflict", 422: "Unprocessable Entity", 429: "Too Many Requests",
+  500: "Internal Server Error", 502: "Bad Gateway", 503: "Service Unavailable",
+};
 
 const AUTO_HEADERS: KV[] = [
   { id: "_h_auth", key: "Authorization", value: "<calculated when request is sent>", enabled: true },
