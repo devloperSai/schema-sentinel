@@ -93,9 +93,10 @@ export function EndpointBuilder({ initial, footer }: { initial: EndpointConfig; 
     navigate({ to: "/endpoints/$id", params: { id: draft.id } });
   };
 
-  const runTest = () => {
+  const runTest = (download = false) => {
     setTesting(true);
     setResponse(null);
+    setSendOpen(false);
     setTimeout(() => {
       const resolvedUrl = utils.resolve(draft.url, activeEnv);
       const sample = {
@@ -103,18 +104,32 @@ export function EndpointBuilder({ initial, footer }: { initial: EndpointConfig; 
         data: { id: "evt_4f2a", total_due: 12450, currency: { code: "USD", symbol: "$" }, items: [{ sku: "A-1", qty: 2 }] },
         meta: { generated_at: new Date().toISOString(), schema_version: "v1.4.2" },
       };
+      const body = JSON.stringify(sample, null, 2);
+      const status = 200;
       setResponse({
-        status: 200,
+        status,
         time: 80 + Math.floor(Math.random() * 220),
-        size: "1.2 KB",
-        body: JSON.stringify(sample, null, 2),
+        size: `${(new Blob([body]).size / 1024).toFixed(2)} KB`,
+        body,
         headers: {
           "content-type": "application/json",
           "x-request-id": "req_" + Math.random().toString(36).slice(2, 10),
           "cache-control": "no-store",
         },
+        tests: [
+          { name: "status is 2xx", pass: status < 300 },
+          { name: "response time < 500ms", pass: true },
+          { name: "schema matches baseline", pass: Math.random() > 0.2 },
+        ],
       });
       setTesting(false);
+      if (download) {
+        const blob = new Blob([body], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = `${draft.name || "response"}.json`; a.click();
+        URL.revokeObjectURL(url);
+      }
     }, 700);
   };
 
